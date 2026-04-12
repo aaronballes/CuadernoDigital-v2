@@ -1,68 +1,217 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ejercicios - Gestión de Parcelas</title>
     <style>
+        :root {
+            --primary: #2d5a27;
+            --primary-light: #4a8f47;
+            --primary-dark: #1e3d1a;
+            --bg: #f8faf5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e0e8e0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.07);
+            --radius: 12px;
+            --danger: #dc3545;
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
-        .header { background: #2c5f2d; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.5em; }
-        .header a { color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.2); border-radius: 5px; }
-        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-        .card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .actions { margin-bottom: 20px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background: #2c5f2d; color: white; }
-        .btn:hover { background: #3d7a3a; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: 600; }
-        .loading, .empty { text-align: center; padding: 40px; color: #666; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: #2c5f2d; text-decoration: none; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        header h1 { font-size: 1.25rem; }
+        
+        header a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+        }
+        
+        header a:hover { background: rgba(255,255,255,0.3); }
+        
+        main { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header h2 { color: var(--primary); }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn:hover { background: var(--primary-light); }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .list-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-item:last-child { border-bottom: none; }
+        .list-item:hover { background: #fafcf8; }
+        
+        .list-item .title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .actions { display: flex; gap: 0.5rem; }
+        
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-edit { background: var(--primary); color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+        
+        .loading, .empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .empty { background: var(--card-bg); border-radius: var(--radius); }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 400px; }
-        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .close { background: none; border: none; font-size: 1.5em; cursor: pointer; }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-header h3 { color: var(--primary); }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .form-group { margin-bottom: 1rem; }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn-full { width: 100%; }
     </style>
 </head>
 <body>
-    <div class="header">
+    <header>
         <h1>📅 Ejercicios</h1>
         <a href="/home">← Inicio</a>
-    </div>
+    </header>
     
-    <div class="container">
-        <a href="/home" class="back-link">← Volver al inicio</a>
+    <main>
+        <div class="page-header">
+            <h2>Ejercicios (Campañas Anuales)</h2>
+            <button class="btn" onclick="abrirModalCrear()">+ Nuevo Ejercicio</button>
+        </div>
         
         <div class="card">
-            <div class="actions">
-                <button class="btn" onclick="abrirModalCrear()">+ Nuevo Ejercicio</button>
-            </div>
-            
             <div id="content">
-                <div class="loading">Cargando...</div>
+                <div class="loading">Cargando ejercicios...</div>
             </div>
         </div>
-    </div>
+    </main>
     
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modal-titulo">Nuevo Ejercicio</h2>
+                <h3 id="modal-titulo">Nuevo Ejercicio</h3>
                 <button class="close" onclick="cerrarModal()">&times;</button>
             </div>
             <form id="form-ejercicio">
                 <input type="hidden" id="ejercicio-id">
                 <div class="form-group">
-                    <label>Ejercicio</label>
-                    <input type="text" id="ejercicio" placeholder="Ej: 2026" required>
+                    <label>Año</label>
+                    <input type="text" id="ejercicio" required placeholder="Ej: 2026">
                 </div>
-                <button type="submit" class="btn" style="width:100%">Guardar</button>
+                <button type="submit" class="btn btn-full">Guardar</button>
             </form>
         </div>
     </div>
@@ -75,26 +224,24 @@
                 .then(r => r.json())
                 .then(data => {
                     const content = document.getElementById('content');
-                    if (data.length === 0) {
+                    if (!data.length) {
                         content.innerHTML = '<div class="empty">No hay ejercicios registrados</div>';
                         return;
                     }
-                    let html = '<table><thead><tr><th>ID</th><th>Ejercicio</th><th>Acciones</th></tr></thead><tbody>';
+                    let html = '';
                     data.forEach(e => {
-                        html += `<tr>
-                            <td>${e.ejercicioId || '-'}</td>
-                            <td>${e.ejercicio || '-'}</td>
-                            <td>
-                                <button class="btn" onclick='editarEjercicio(${JSON.stringify(e)})'>Editar</button>
-                                <button class="btn" style="background:#dc3545" onclick="eliminarEjercicio('${e.ejercicioId}')">Eliminar</button>
-                            </td>
-                        </tr>`;
+                        html += `<div class="list-item">
+                            <span class="title">${e.ejercicio || e.ejercicioId}</span>
+                            <div class="actions">
+                                <button class="btn-sm btn-edit" onclick='editarEjercicio(${JSON.stringify(e)})'>Editar</button>
+                                <button class="btn-sm btn-delete" onclick="eliminarEjercicio('${e.ejercicioId}')">Eliminar</button>
+                            </div>
+                        </div>`;
                     });
-                    html += '</tbody></table>';
                     content.innerHTML = html;
                 })
-                .catch(err => {
-                    document.getElementById('content').innerHTML = '<div style="color:red;padding:20px">Error al cargar ejercicios</div>';
+                .catch(() => {
+                    content.innerHTML = '<div class="empty">Error al cargar ejercicios</div>';
                 });
         }
         

@@ -31,8 +31,13 @@ public class Parcela {
     @Column(name = "superficie")
     private BigDecimal superficie;
     
-    /** Identificador del propietario de la parcela */
-    @Column(name = "propietario_id")
+    /** Propietario de la parcela */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "propietario_id")
+    private Propietario propietario;
+    
+    /** ID del propietario (para兼容性 con datos existentes) */
+    @Transient
     private Long propietarioId;
 
     public Parcela() {}
@@ -52,6 +57,12 @@ public class Parcela {
     public BigDecimal getSuperficie() { return superficie; }
     public void setSuperficie(BigDecimal superficie) { this.superficie = superficie; }
     
-    public Long getPropietarioId() { return propietarioId; }
+    public Propietario getPropietario() { return propietario; }
+    public void setPropietario(Propietario propietario) { this.propietario = propietario; }
+    
+    public Long getPropietarioId() { 
+        if (propietario != null) return propietario.getPropietarioId();
+        return propietarioId; 
+    }
     public void setPropietarioId(Long propietarioId) { this.propietarioId = propietarioId; }
 }

@@ -1,5 +1,6 @@
 package com.campos.gestionparcelas.controller;
 
+import com.campos.gestionparcelas.model.dto.ParcelaDTO;
 import com.campos.gestionparcelas.model.entity.Parcela;
 import com.campos.gestionparcelas.service.ParcelaService;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class ParcelaController {
     }
     
     @GetMapping
-    public List<Parcela> listar() {
+    public List<ParcelaDTO> listar() {
         return parcelaService.listar();
     }
     

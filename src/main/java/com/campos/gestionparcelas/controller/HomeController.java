@@ -35,4 +35,9 @@ public class HomeController {
     public String detalles() {
         return "detalles";
     }
+    
+    @GetMapping("/propietarios")
+    public String propietarios() {
+        return "propietarios";
+    }
 }

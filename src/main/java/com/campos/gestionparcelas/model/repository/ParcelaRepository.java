@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface ParcelaRepository extends JpaRepository<Parcela, Long> {
     
-    @Query("SELECT p FROM Parcela p ORDER BY p.propietarioId, p.poligono, p.parcela")
+    @Query("SELECT p FROM Parcela p LEFT JOIN p.propietario ORDER BY p.poligono, p.parcela")
     List<Parcela> findAllOrderByPropietarioAndPoligonoAndParcela();
 }

@@ -56,12 +56,14 @@ public class DetalleService {
         
         // Consulta principal: matriz parcela × ejercicio con cultivo
         String sql = "SELECT P.PARCELA_ID, P.NOMBRE, P.POLIGONO, P.PARCELA, P.SUPERFICIE, " +
+                     "NVL(PO.PROPIETARIO_ID, 0) as PROPIETARIO_ID, NVL(PO.PROPIETARIO, '') as PROPIETARIO, " +
                      "E.EJERCICIO_ID, E.EJERCICIO, NVL(C.CULTIVO_ID, 0) as CULTIVO_ID, NVL(C.CULTIVO, '') as CULTIVO " +
                      "FROM PARCELAS P " +
+                     "LEFT JOIN PROPIETARIOS PO ON P.PROPIETARIO_ID = PO.PROPIETARIO_ID " +
                      "CROSS JOIN EJERCICIOS E " +
                      "LEFT JOIN DETALLES D ON D.PARCELA_ID = P.PARCELA_ID AND D.EJERCICIO_ID = E.EJERCICIO_ID " +
                      "LEFT JOIN CULTIVOS C ON C.CULTIVO_ID = D.CULTIVO_ID " +
-                     "ORDER BY E.EJERCICIO DESC, P.NOMBRE";
+                     "ORDER BY PO.PROPIETARIO, E.EJERCICIO DESC, P.NOMBRE";
         
         @SuppressWarnings("unchecked")
         List<Object[]> rows = entityManager.createNativeQuery(sql).getResultList();
@@ -97,41 +99,17 @@ public class DetalleService {
             item.put("poligono", row[2]);
             item.put("parcela", row[3]);
             item.put("superficie", row[4]);
-            item.put("ejercicioId", String.valueOf(row[5]));
-            item.put("ejercicio", row[6]);
-            item.put("cultivoId", ((Number) row[7]).longValue());
-            item.put("cultivo", row[8]);
+            item.put("propietarioId", ((Number) row[5]).longValue());
+            item.put("propietario", row[6]);
+            item.put("ejercicioId", String.valueOf(row[7]));
+            item.put("ejercicio", row[8]);
+            item.put("cultivoId", ((Number) row[9]).longValue());
+            item.put("cultivo", row[10]);
             item.put("alertaRepeticion", parcelasAlerta.getOrDefault(parcelaId, false));
             result.add(item);
         }
         
         return result;
-    }
-    
-    /**
-     * Detecta si una lista de cultivos tiene repeticiones consecutivas.
-     * 
-     * @param cultivos Lista de IDs de cultivos ordenados por ejercicio
-     * @param minimo Número mínimo de repeticiones consecutivas para activar la alerta
-     * @return true si hay minimo o más cultivos consecutivos iguales (excluyendo 0/null)
-     */
-    private boolean tieneRepeticionConsecutiva(List<String> cultivos, int minimo) {
-        if (cultivos.size() < minimo) return false;
-        
-        for (int i = 0; i <= cultivos.size() - minimo; i++) {
-            String cultivo = cultivos.get(i);
-            if (cultivo == null || cultivo.equals("0") || cultivo.isEmpty()) continue;
-            
-            boolean todosIguales = true;
-            for (int j = i; j < i + minimo; j++) {
-                if (!cultivos.get(j).equals(cultivo)) {
-                    todosIguales = false;
-                    break;
-                }
-            }
-            if (todosIguales) return true;
-        }
-        return false;
     }
     
     /**
@@ -144,13 +122,15 @@ public class DetalleService {
         List<Map<String, Object>> result = new ArrayList<>();
         
         String sql = "SELECT P.PARCELA_ID, P.NOMBRE, P.POLIGONO, P.PARCELA, P.SUPERFICIE, " +
+                     "NVL(PO.PROPIETARIO_ID, 0) as PROPIETARIO_ID, NVL(PO.PROPIETARIO, '') as PROPIETARIO, " +
                      "E.EJERCICIO_ID, E.EJERCICIO, NVL(C.CULTIVO_ID, 0) as CULTIVO_ID, NVL(C.CULTIVO, '') as CULTIVO " +
                      "FROM PARCELAS P " +
+                     "LEFT JOIN PROPIETARIOS PO ON P.PROPIETARIO_ID = PO.PROPIETARIO_ID " +
                      "CROSS JOIN EJERCICIOS E " +
                      "LEFT JOIN DETALLES D ON D.PARCELA_ID = P.PARCELA_ID AND D.EJERCICIO_ID = E.EJERCICIO_ID " +
                      "LEFT JOIN CULTIVOS C ON C.CULTIVO_ID = D.CULTIVO_ID " +
                      "WHERE E.EJERCICIO_ID = '" + ejercicioId + "' " +
-                     "ORDER BY P.NOMBRE";
+                     "ORDER BY PO.PROPIETARIO, P.NOMBRE";
         
         @SuppressWarnings("unchecked")
         List<Object[]> rows = entityManager.createNativeQuery(sql).getResultList();
@@ -254,5 +234,24 @@ public class DetalleService {
         String sql = "DELETE FROM DETALLES WHERE PARCELA_ID = " + id.getParcelaId() + 
                      " AND EJERCICIO_ID = '" + id.getEjercicioId() + "'";
         entityManager.createNativeQuery(sql).executeUpdate();
+    }
+    
+    private boolean tieneRepeticionConsecutiva(List<String> cultivos, int minimo) {
+        if (cultivos.size() < minimo) return false;
+        
+        for (int i = 0; i <= cultivos.size() - minimo; i++) {
+            String cultivo = cultivos.get(i);
+            if (cultivo == null || cultivo.equals("0") || cultivo.isEmpty()) continue;
+            
+            boolean todosIguales = true;
+            for (int j = i; j < i + minimo; j++) {
+                if (!cultivos.get(j).equals(cultivo)) {
+                    todosIguales = false;
+                    break;
+                }
+            }
+            if (todosIguales) return true;
+        }
+        return false;
     }
 }
