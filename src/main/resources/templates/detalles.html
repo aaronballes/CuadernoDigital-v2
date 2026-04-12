@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles - Gestión de Parcelas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .header { background: #2c5f2d; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5em; }
+        .header a { color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.2); border-radius: 5px; }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .info { background: #d4edda; color: #155724; padding: 10px 15px; border-radius: 5px; margin-bottom: 15px; font-size: 14px; }
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .filters select, .filters button { padding: 10px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .filters select { min-width: 200px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background: #2c5f2d; color: white; }
+        .btn:hover { background: #3d7a3a; }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
+        .btn-gray { background: #6c757d; }
+        .btn-gray:hover { background: #5a6268; }
+        .btn-red { background: #dc3545; }
+        .btn-red:hover { background: #c82333; }
+        .btn-green { background: #28a745; }
+        .btn-green:hover { background: #218838; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #2c5f2d; text-decoration: none; }
+        
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { padding: 10px 8px; text-align: center; border: 1px solid #ddd; }
+        th { background: #2c5f2d; color: white; font-weight: 600; white-space: nowrap; }
+        th.ejercicio-col { min-width: 100px; }
+        td.parcela-info { text-align: left; background: #f8f9fa; font-weight: 500; white-space: nowrap; }
+        td.cultivo-cell { min-width: 120px; }
+        td.cultivo-cell select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        td.cultivo-cell select.sin-cultivo { background: #fff3cd; }
+        td.cultivo-cell select.con-cultivo { background: #d4edda; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .total { background: #e7f3ff; padding: 10px 15px; border-radius: 5px; margin-bottom: 15px; font-size: 14px; color: #004085; }
+        
+        tr.row-alerta td { background-color: #fff0f0 !important; }
+        tr.row-alerta td:first-child { border-left: 4px solid #dc3545 !important; font-weight: bold; }
+        .icono-alerta { margin-left: 5px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 400px; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 1.2em; }
+        .close { background: none; border: none; font-size: 1.5em; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .btn-row { display: flex; gap: 10px; }
+        .btn-row .btn { flex: 1; }
+        .modal-alerta { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; border: 1px solid #f5c6cb; font-weight: bold; }
+        .modal-alerta.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Detalles - Cultivos por Parcela y Ejercicio</h1>
+        <a href="/home">← Inicio</a>
+    </div>
+    
+    <div class="container">
+        <a href="/home" class="back-link">← Volver al inicio</a>
+        
+        <div class="card">
+            <div class="info">Matriz de cultivos: cada celda representa la combinación de una parcela con un ejercicio. Las filas en ROJO indican parcelas con el mismo cultivo en 3 ejercicios consecutivos.</div>
+            
+            <div class="filters">
+                <label>Filtrar por ejercicio:</label>
+                <select id="filtro-ejercicio">
+                    <option value="">Todos los ejercicios</option>
+                </select>
+                <button class="btn btn-gray" onclick="filtrar()">Filtrar</button>
+                <button class="btn btn-gray" onclick="resetearFiltro()">Mostrar todos</button>
+            </div>
+            
+            <div id="total" class="total"></div>
+            <div id="loading" class="loading">Cargando datos...</div>
+            <div class="table-container" id="table-container" style="display:none;">
+                <table id="matrix-table">
+                    <thead id="table-head"></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Guardar Cambios</h2>
+                <button class="close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <p id="modal-mensaje" style="margin-bottom: 10px;"></p>
+            <div id="modal-alerta" class="modal-alerta"></div>
+            <div class="form-group" id="cultivo-select-group">
+                <label>Cultivo:</label>
+                <select id="modal-cultivo" onchange="verificarCambioCultivo()"></select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-green" onclick="guardarCambios()">Guardar</button>
+                <button class="btn" onclick="cerrarModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API = '/api/detalles';
+        let ejercicios = [];
+        let parcelasData = [];
+        let parcelasMap = new Map();
+        let cultivos = [];
+        let datosActuales = [];
+        let filtroActual = null;
+        let alertasActivas = new Set();
+        
+        let modalData = { parcelaId: null, ejercicioId: null, cultivoActual: null, parcelaNombre: null };
+        
+        async function init() {
+            await cargarSelectores();
+            await cargarDatos();
+        }
+        
+        async function cargarSelectores() {
+            const [ejerciciosRes, cultivosRes] = await Promise.all([
+                fetch('/api/ejercicios').then(r => r.json()),
+                fetch('/api/cultivos').then(r => r.json())
+            ]);
+            
+            ejercicios = ejerciciosRes;
+            cultivos = cultivosRes;
+            
+            const filtro = document.getElementById('filtro-ejercicio');
+            filtro.innerHTML = '<option value="">Todos los ejercicios</option>' +
+                ejercicios.map(e => `<option value="${e.ejercicioId}">${e.ejercicio || e.ejercicioId}</option>`).join('');
+        }
+        
+        async function cargarDatos() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('table-container').style.display = 'none';
+            
+            let url = API;
+            if (filtroActual) {
+                url += '?ejercicio=' + filtroActual;
+            }
+            
+            try {
+                datosActuales = await fetch(url).then(r => r.json());
+                generarTabla();
+            } catch (err) {
+                alert('Error al cargar datos');
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('table-container').style.display = 'block';
+        }
+        
+        function generarTabla() {
+            const ejerciciosMostrar = filtroActual 
+                ? ejercicios.filter(e => String(e.ejercicioId) === String(filtroActual))
+                : ejercicios;
+            
+            const conCultivo = datosActuales.filter(d => d.cultivoId > 0).length;
+            document.getElementById('total').textContent = 
+                `Total parcelas × ejercicios: ${datosActuales.length} | Con cultivo asignado: ${conCultivo} | Sin asignar: ${datosActuales.length - conCultivo}`;
+            
+            let headerHtml = '<tr><th>Parcela</th><th>Polígono</th><th>Nº Parc.</th><th>Sup.</th>';
+            ejerciciosMostrar.forEach(e => {
+                headerHtml += `<th class="ejercicio-col">${e.ejercicio || e.ejercicioId}</th>`;
+            });
+            headerHtml += '</tr>';
+            document.getElementById('table-head').innerHTML = headerHtml;
+            
+            parcelasMap = new Map();
+            alertasActivas = new Set();
+            
+            datosActuales.forEach(d => {
+                if (!parcelasMap.has(d.parcelaId)) {
+                    parcelasMap.set(d.parcelaId, {
+                        nombre: d.nombre,
+                        poligono: d.poligono,
+                        parcela: d.parcela,
+                        superficie: d.superficie,
+                        ejercicios: {},
+                        alertaRepeticion: d.alertaRepeticion
+                    });
+                }
+                parcelasMap.get(d.parcelaId).ejercicios[d.ejercicioId] = {
+                    cultivoId: d.cultivoId,
+                    cultivo: d.cultivo
+                };
+                if (d.alertaRepeticion) {
+                    alertasActivas.add(d.parcelaId);
+                }
+            });
+            
+            parcelasData = Array.from(parcelasMap.entries());
+            
+            let bodyHtml = '';
+            parcelasData.forEach(([parcelaId, p]) => {
+                const tieneAlerta = alertasActivas.has(parcelaId);
+                const rowClass = tieneAlerta ? 'row-alerta' : '';
+                const iconoAlerta = tieneAlerta ? '<span class="icono-alerta">⚠️</span>' : '';
+                
+                bodyHtml += `<tr class="${rowClass}">
+                    <td class="parcela-info">${p.nombre || '-'}${iconoAlerta}</td>
+                    <td class="parcela-info">${p.poligono || '-'}</td>
+                    <td class="parcela-info">${p.parcela || '-'}</td>
+                    <td class="parcela-info">${p.superficie || '-'}</td>`;
+                
+                ejerciciosMostrar.forEach(e => {
+                    const dato = p.ejercicios[e.ejercicioId] || { cultivoId: 0, cultivo: '' };
+                    const cultivoId = dato.cultivoId;
+                    const tieneCultivo = cultivoId > 0;
+                    
+                    let badgeHtml;
+                    if (tieneCultivo) {
+                        if (tieneAlerta) {
+                            badgeHtml = `<span class="badge badge-danger">${dato.cultivo}</span><br>`;
+                        } else {
+                            badgeHtml = `<span class="badge badge-success">${dato.cultivo}</span><br>`;
+                        }
+                    } else {
+                        badgeHtml = '<span class="badge badge-warning">Sin asignar</span><br>';
+                    }
+                    
+                    const ejercicioDisplay = e.ejercicio || e.ejercicioId;
+                    bodyHtml += `<td class="cultivo-cell">
+                        ${badgeHtml}
+                        <button class="btn btn-small" onclick="abrirModal('${p.nombre || ''}', '${e.ejercicioId}', '${ejercicioDisplay}', ${cultivoId}, ${parcelaId})" 
+                            style="margin-top:5px;">
+                            ${tieneCultivo ? 'Cambiar' : 'Asignar'}
+                        </button>
+                    </td>`;
+                });
+                
+                bodyHtml += '</tr>';
+            });
+            
+            document.getElementById('table-body').innerHTML = bodyHtml;
+        }
+        
+        function filtrar() {
+            filtroActual = document.getElementById('filtro-ejercicio').value;
+            cargarDatos();
+        }
+        
+        function resetearFiltro() {
+            filtroActual = null;
+            document.getElementById('filtro-ejercicio').value = '';
+            cargarDatos();
+        }
+        
+        function abrirModal(nombreParcela, ejercicioId, ejercicioNombre, cultivoId, parcelaId) {
+            modalData.parcelaId = parcelaId;
+            modalData.ejercicioId = ejercicioId;
+            modalData.cultivoActual = cultivoId;
+            modalData.parcelaNombre = nombreParcela;
+            
+            document.getElementById('modal-mensaje').textContent = 
+                `Parcela: ${nombreParcela || '-'} | Ejercicio: ${ejercicioNombre || ejercicioId}`;
+            
+            document.getElementById('modal-alerta').classList.remove('visible');
+            document.getElementById('modal-alerta').textContent = '';
+            
+            const select = document.getElementById('modal-cultivo');
+            select.innerHTML = '<option value="0">-- Sin cultivo --</option>' +
+                cultivos.map(c => `<option value="${c.cultivoId}" ${c.cultivoId == cultivoId ? 'selected' : ''}>${c.cultivo}</option>`).join('');
+            
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function verificarCambioCultivo() {
+            const nuevoCultivoId = parseInt(document.getElementById('modal-cultivo').value);
+            const modalAlerta = document.getElementById('modal-alerta');
+            
+            if (nuevoCultivoId === 0 || nuevoCultivoId === modalData.cultivoActual) {
+                modalAlerta.classList.remove('visible');
+                return;
+            }
+            
+            const parcelaData = parcelasMap.get(modalData.parcelaId);
+            if (parcelaData) {
+                const ejerciciosArr = Object.values(parcelaData.ejercicios);
+                const cultivosArr = ejerciciosArr.map(e => String(e.cultivoId)).filter(id => id !== '0');
+                
+                const cultivosSimulado = [...cultivosArr];
+                const idx = ejerciciosArr.findIndex(e => String(e.cultivoId) === String(modalData.cultivoActual));
+                if (idx >= 0) {
+                    cultivosSimulado[idx] = String(nuevoCultivoId);
+                } else {
+                    cultivosSimulado.push(String(nuevoCultivoId));
+                }
+                
+                if (tieneRepeticionConsecutiva(cultivosSimulado, 3)) {
+                    modalAlerta.textContent = '⚠️ ERROR: Este cultivo provocará 3 ejercicios consecutivos con el mismo cultivo. Monocultivo.';
+                    modalAlerta.classList.add('visible');
+                    modalAlerta.style.background = '#f8d7da';
+                    modalAlerta.style.color = '#721c24';
+                    modalAlerta.style.borderColor = '#f5c6cb';
+                } else if (tieneRepeticionConsecutiva(cultivosSimulado, 2)) {
+                    modalAlerta.textContent = '⚠️ AVISO: Este cultivo provocará 2 ejercicios consecutivos.';
+                    modalAlerta.classList.add('visible');
+                    modalAlerta.style.background = '#fff3cd';
+                    modalAlerta.style.color = '#856404';
+                    modalAlerta.style.borderColor = '#ffc107';
+                } else {
+                    modalAlerta.classList.remove('visible');
+                }
+            }
+        }
+        
+        function tieneRepeticionConsecutiva(cultivos, minimo) {
+            if (cultivos.length < minimo) return false;
+            
+            for (let i = 0; i <= cultivos.length - minimo; i++) {
+                const cultivo = String(cultivos[i]);
+                if (!cultivo || cultivo === '0' || cultivo === 'undefined') continue;
+                
+                let todosIguales = true;
+                for (let j = i; j < i + minimo; j++) {
+                    if (String(cultivos[j]) !== cultivo) {
+                        todosIguales = false;
+                        break;
+                    }
+                }
+                if (todosIguales) return true;
+            }
+            return false;
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        async function guardarCambios() {
+            const cultivoId = parseInt(document.getElementById('modal-cultivo').value);
+            
+            console.log('Guardando:', modalData);
+            
+            if (!modalData.parcelaId || !modalData.ejercicioId) {
+                alert('Error: Datos inválidos. Recarga la página.');
+                return;
+            }
+            
+            if (cultivoId === 0) {
+                if (modalData.cultivoActual > 0) {
+                    await fetch(API, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            parcelaId: modalData.parcelaId,
+                            ejercicioId: modalData.ejercicioId,
+                            cultivoId: modalData.cultivoActual
+                        })
+                    });
+                }
+            } else {
+                const response = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        parcelaId: modalData.parcelaId,
+                        ejercicioId: modalData.ejercicioId,
+                        cultivoId: cultivoId
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.alerta) {
+                        alert('⚠️ ERROR: Esta parcela ahora tiene 3 ejercicios consecutivos con el mismo cultivo. Monocultivo detectado.');
+                    }
+                } else {
+                    const error = await response.text();
+                    console.error('Error al guardar:', error);
+                    alert('Error al guardar: ' + error);
+                }
+            }
+            
+            cerrarModal();
+            await cargarDatos();
+        }
+        
+        init();
+    </script>
+</body>
+</html>

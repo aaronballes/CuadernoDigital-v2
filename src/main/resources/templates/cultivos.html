@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultivos - Gestión de Parcelas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .header { background: #2c5f2d; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5em; }
+        .header a { color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.2); border-radius: 5px; }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .actions { margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background: #2c5f2d; color: white; }
+        .btn:hover { background: #3d7a3a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .loading, .empty { text-align: center; padding: 40px; color: #666; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #2c5f2d; text-decoration: none; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 400px; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close { background: none; border: none; font-size: 1.5em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌱 Cultivos</h1>
+        <a href="/home">← Inicio</a>
+    </div>
+    
+    <div class="container">
+        <a href="/home" class="back-link">← Volver al inicio</a>
+        
+        <div class="card">
+            <div class="actions">
+                <button class="btn" onclick="abrirModalCrear()">+ Nuevo Cultivo</button>
+            </div>
+            
+            <div id="content">
+                <div class="loading">Cargando...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Nuevo Cultivo</h2>
+                <button class="close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <form id="form-cultivo">
+                <input type="hidden" id="cultivo-id">
+                <div class="form-group">
+                    <label>Nombre del Cultivo</label>
+                    <input type="text" id="cultivo" required>
+                </div>
+                <div class="form-group">
+                    <label>Hectáreas</label>
+                    <input type="number" step="0.01" id="hectareas">
+                </div>
+                <div class="form-group">
+                    <label>Porcentaje</label>
+                    <input type="number" step="0.01" id="porcentaje">
+                </div>
+                <button type="submit" class="btn" style="width:100%">Guardar</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const API = '/api/cultivos';
+        
+        function cargarCultivos() {
+            fetch(API)
+                .then(r => r.json())
+                .then(data => {
+                    const content = document.getElementById('content');
+                    if (data.length === 0) {
+                        content.innerHTML = '<div class="empty">No hay cultivos registrados</div>';
+                        return;
+                    }
+                    let html = '<table><thead><tr><th>ID</th><th>Cultivo</th><th>Hectáreas</th><th>Porcentaje</th><th>Acciones</th></tr></thead><tbody>';
+                    data.forEach(c => {
+                        html += `<tr>
+                            <td>${c.cultivoId || '-'}</td>
+                            <td>${c.cultivo || '-'}</td>
+                            <td>${c.hectareas || '-'}</td>
+                            <td>${c.porcentaje || '-'}</td>
+                            <td>
+                                <button class="btn" onclick='editarCultivo(${JSON.stringify(c)})'>Editar</button>
+                                <button class="btn" style="background:#dc3545" onclick="eliminarCultivo(${c.cultivoId})">Eliminar</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('content').innerHTML = '<div style="color:red;padding:20px">Error al cargar cultivos</div>';
+                });
+        }
+        
+        function abrirModalCrear() {
+            document.getElementById('modal-titulo').textContent = 'Nuevo Cultivo';
+            document.getElementById('form-cultivo').reset();
+            document.getElementById('cultivo-id').value = '';
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function editarCultivo(c) {
+            document.getElementById('modal-titulo').textContent = 'Editar Cultivo';
+            document.getElementById('cultivo-id').value = c.cultivoId;
+            document.getElementById('cultivo').value = c.cultivo || '';
+            document.getElementById('hectareas').value = c.hectareas || '';
+            document.getElementById('porcentaje').value = c.porcentaje || '';
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        document.getElementById('form-cultivo').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('cultivo-id').value;
+            const cultivo = {
+                cultivo: document.getElementById('cultivo').value,
+                hectareas: parseFloat(document.getElementById('hectareas').value) || null,
+                porcentaje: parseFloat(document.getElementById('porcentaje').value) || null
+            };
+            
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? API + '/' + id : API;
+            
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cultivo)
+            }).then(r => { if (r.ok) { cerrarModal(); cargarCultivos(); } });
+        });
+        
+        function eliminarCultivo(id) {
+            if (confirm('¿Eliminar este cultivo?')) {
+                fetch(API + '/' + id, { method: 'DELETE' })
+                    .then(r => { if (r.ok) cargarCultivos(); });
+            }
+        }
+        
+        cargarCultivos();
+    </script>
+</body>
+</html>

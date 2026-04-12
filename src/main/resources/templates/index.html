@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Parcelas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5f2d 0%, #97bc62 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c5f2d;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .menu-item {
+            background: linear-gradient(135deg, #2c5f2d 0%, #4a8f47 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(44, 95, 45, 0.4);
+        }
+        .menu-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .menu-item .title {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .menu-item .desc {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .status {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌾 Gestión de Parcelas</h1>
+        <p class="subtitle">Sistema de gestión agrícola</p>
+        
+        <div class="menu">
+            <a href="/parcelas" class="menu-item">
+                <span class="icon">📍</span>
+                <span class="title">Parcelas</span>
+                <span class="desc">Gestionar parcelas</span>
+            </a>
+            <a href="/ejercicios" class="menu-item">
+                <span class="icon">📅</span>
+                <span class="title">Ejercicios</span>
+                <span class="desc">Gestionar ejercicios</span>
+            </a>
+            <a href="/cultivos" class="menu-item">
+                <span class="icon">🌱</span>
+                <span class="title">Cultivos</span>
+                <span class="desc">Gestionar cultivos</span>
+            </a>
+            <a href="/detalles" class="menu-item">
+                <span class="icon">📋</span>
+                <span class="title">Detalles</span>
+                <span class="desc">Ver detalles</span>
+            </a>
+            <a href="/h2-console" class="menu-item full-width" style="background: linear-gradient(135deg, #495057 0%, #6c757d 100%);">
+                <span class="icon">🗄️</span>
+                <span class="title">Consola H2</span>
+                <span class="desc">Base de datos en memoria</span>
+            </a>
+        </div>
+            <a href="/h2-console" class="menu-item full-width" style="background: linear-gradient(135deg, #495057 0%, #6c757d 100%);">
+                <span class="icon">🗄️</span>
+                <span class="title">Consola H2</span>
+                <span class="desc">Base de datos en memoria</span>
+            </a>
+        </div>
+        
+        <div id="status" class="status">
+            Verificando conexión...
+        </div>
+    </div>
+    
+    <script>
+        fetch('/api/parcelas')
+            .then(response => {
+                const status = document.getElementById('status');
+                if (response.ok) {
+                    status.className = 'status online';
+                    status.innerHTML = '✓ API en línea - Servidor funcionando correctamente';
+                } else {
+                    status.className = 'status offline';
+                    status.innerHTML = '✗ Error de conexión con la API';
+                }
+            })
+            .catch(() => {
+                const status = document.getElementById('status');
+                status.className = 'status offline';
+                status.innerHTML = '✗ API no disponible';
+            });
+    </script>
+</body>
+</html>
