@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles - Gestión de Parcelas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="/js/detalles.js"></script>
     <style>
         :root {
             --primary: #2d5a27;
@@ -88,11 +92,6 @@
             background: white;
         }
         
-        .filters select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
         .btn {
             padding: 0.75rem 1.25rem;
             border: none;
@@ -106,6 +105,12 @@
         
         .btn-gray { background: #6c757d; color: white; }
         .btn-gray:hover { background: #5a6268; }
+        
+        .btn-excel { background: #217346; color: white; }
+        .btn-excel:hover { background: #1e6b41; }
+        
+        .btn-pdf { background: #dc3545; color: white; }
+        .btn-pdf:hover { background: #c82333; }
         
         .btn-sm {
             padding: 0.4rem 0.75rem;
@@ -314,6 +319,8 @@
             </select>
             <button class="btn btn-primary" onclick="filtrar()">Filtrar</button>
             <button class="btn btn-gray" onclick="resetearFiltro()">Mostrar todos</button>
+            <button class="btn btn-excel" onclick="exportarExcel()">📊 Excel</button>
+            <button class="btn btn-pdf" onclick="exportarPDF()">📄 PDF</button>
         </div>
         
         <div class="stats">
@@ -352,256 +359,5 @@
         </div>
     </div>
     
-    <script>
-        const API = '/api/detalles';
-        const API_PROPIETARIOS = '/api/propietarios';
-        let ejercicios = [];
-        let parcelasMap = new Map();
-        let cultivos = [];
-        let propietarios = [];
-        let datosCompletos = [];
-        let filtroActual = null;
-        let filtroPropietario = null;
-        let alertasActivas = new Set();
-        let modalData = { parcelaId: null, ejercicioId: null, ejercicioNombre: null, cultivoActual: null };
-        
-        async function init() {
-            const [ejerciciosRes, cultivosRes, propietariosRes] = await Promise.all([
-                fetch('/api/ejercicios').then(r => r.json()),
-                fetch('/api/cultivos').then(r => r.json()),
-                fetch(API_PROPIETARIOS).then(r => r.json())
-            ]);
-            
-            ejercicios = ejerciciosRes;
-            cultivos = cultivosRes;
-            propietarios = propietariosRes;
-            
-            document.getElementById('filtro-propietario').innerHTML = 
-                '<option value="">Todos</option>' +
-                propietarios.map(p => `<option value="${p.propietarioId}">${p.propietario}</option>`).join('');
-            
-            document.getElementById('filtro-ejercicio').innerHTML = 
-                '<option value="">Todos los ejercicios</option>' +
-                ejercicios.map(e => `<option value="${e.ejercicioId}">${e.ejercicio || e.ejercicioId}</option>`).join('');
-            
-            await cargarDatos();
-        }
-        
-        async function cargarDatos() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('table-container').style.display = 'none';
-            
-            let url = API;
-            if (filtroActual) url += '?ejercicio=' + filtroActual;
-            
-            try {
-                datosCompletos = await fetch(url).then(r => r.json());
-                aplicarFiltros();
-            } catch (err) {
-                alert('Error al cargar datos');
-            }
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('table-container').style.display = 'block';
-        }
-        
-        function aplicarFiltros() {
-            let datosFiltrados = datosCompletos;
-            if (filtroPropietario) {
-                datosFiltrados = datosFiltrados.filter(d => d.propietarioId == filtroPropietario);
-            }
-            generarTabla(datosFiltrados);
-        }
-        
-        function generarTabla(datos) {
-            const ejerciciosMostrar = filtroActual 
-                ? ejercicios.filter(e => String(e.ejercicioId) === String(filtroActual))
-                : ejercicios;
-            
-            // Stats
-            const conCultivo = datos.filter(d => d.cultivoId > 0).length;
-            document.getElementById('stat-total').textContent = datos.length;
-            document.getElementById('stat-con').textContent = conCultivo;
-            document.getElementById('stat-sin').textContent = datos.length - conCultivo;
-            document.getElementById('stat-alertas').textContent = alertasActivas.size;
-            
-            // Header
-            let headerHtml = '<tr><th>Parcela</th><th>Propietario</th><th>Polígono</th><th>Nº</th><th>Sup.</th>';
-            ejerciciosMostrar.forEach(e => {
-                headerHtml += `<th>${e.ejercicio || e.ejercicioId}</th>`;
-            });
-            headerHtml += '</tr>';
-            document.getElementById('table-head').innerHTML = headerHtml;
-            
-            // Agrupar por parcela
-            parcelasMap = new Map();
-            alertasActivas = new Set();
-            
-            datos.forEach(d => {
-                if (!parcelasMap.has(d.parcelaId)) {
-                    parcelasMap.set(d.parcelaId, {
-                        nombre: d.nombre,
-                        poligono: d.poligono,
-                        parcela: d.parcela,
-                        superficie: d.superficie,
-                        propietario: d.propietario || '-',
-                        ejercicios: {},
-                        alerta: d.alertaRepeticion
-                    });
-                }
-                parcelasMap.get(d.parcelaId).ejercicios[d.ejercicioId] = {
-                    cultivoId: d.cultivoId,
-                    cultivo: d.cultivo
-                };
-                if (d.alertaRepeticion) alertasActivas.add(d.parcelaId);
-            });
-            
-            document.getElementById('stat-alertas').textContent = alertasActivas.size;
-            
-            // Body
-            let bodyHtml = '';
-            parcelasMap.forEach((p, parcelaId) => {
-                const esAlerta = alertasActivas.has(parcelaId);
-                bodyHtml += `<tr class="${esAlerta ? 'row-alerta' : ''}">
-                    <td class="parcela-info">${p.nombre || '-'}${esAlerta ? ' ⚠️' : ''}</td>
-                    <td class="parcela-info">${p.propietario}</td>
-                    <td class="parcela-info">${p.poligono || '-'}</td>
-                    <td class="parcela-info">${p.parcela || '-'}</td>
-                    <td class="parcela-info">${p.superficie || '-'}</td>`;
-                
-                ejerciciosMostrar.forEach(e => {
-                    const dato = p.ejercicios[e.ejercicioId] || { cultivoId: 0, cultivo: '' };
-                    const tieneCultivo = dato.cultivoId > 0;
-                    const esCeldaAlerta = esAlerta && tieneCultivo;
-                    
-                    let badge = tieneCultivo 
-                        ? (esCeldaAlerta 
-                            ? `<span class="badge badge-danger">${dato.cultivo}</span>` 
-                            : `<span class="badge badge-success">${dato.cultivo}</span>`)
-                        : '<span class="badge badge-warning">-</span>';
-                    
-                    bodyHtml += `<td class="cultivo-cell">
-                        ${badge}
-                        <button class="btn-sm btn-change" style="margin-top:0.5rem;" 
-                            onclick="abrirModal(${parcelaId}, '${e.ejercicioId}', '${e.ejercicio || e.ejercicioId}', ${dato.cultivoId})">
-                            ${tieneCultivo ? 'Cambiar' : 'Asignar'}
-                        </button>
-                    </td>`;
-                });
-                
-                bodyHtml += '</tr>';
-            });
-            
-            document.getElementById('table-body').innerHTML = bodyHtml;
-        }
-        
-        function filtrar() {
-            filtroActual = document.getElementById('filtro-ejercicio').value;
-            filtroPropietario = document.getElementById('filtro-propietario').value;
-            aplicarFiltros();
-        }
-        
-        function resetearFiltro() {
-            filtroActual = null;
-            filtroPropietario = null;
-            document.getElementById('filtro-ejercicio').value = '';
-            document.getElementById('filtro-propietario').value = '';
-            aplicarFiltros();
-        }
-        
-        function abrirModal(parcelaId, ejercicioId, ejercicioNombre, cultivoActual) {
-            modalData = { parcelaId, ejercicioId, ejercicioNombre, cultivoActual };
-            
-            const parcela = parcelasMap.get(parcelaId);
-            document.getElementById('modal-info').textContent = 
-                `Parcela: ${parcela.nombre || '-'} | Ejercicio: ${ejercicioNombre}`;
-            
-            document.getElementById('modal-alerta').classList.remove('visible');
-            
-            document.getElementById('modal-cultivo').innerHTML = 
-                '<option value="0">-- Sin cultivo --</option>' +
-                cultivos.map(c => `<option value="${c.cultivoId}" ${c.cultivoId == cultivoActual ? 'selected' : ''}>${c.cultivo}</option>`).join('');
-            
-            document.getElementById('modal').classList.add('active');
-        }
-        
-        function verificarCambio() {
-            const nuevoId = parseInt(document.getElementById('modal-cultivo').value);
-            const modalAlerta = document.getElementById('modal-alerta');
-            
-            if (!nuevoId || nuevoId === modalData.cultivoActual) {
-                modalAlerta.classList.remove('visible');
-                return;
-            }
-            
-            const parcela = parcelasMap.get(modalData.parcelaId);
-            const cultivosArr = Object.values(parcela.ejercicios).map(e => String(e.cultivoId)).filter(id => id !== '0');
-            cultivosArr.push(String(nuevoId));
-            
-            // Verificar 3 consecutivos
-            let repetidos = 0;
-            for (let i = 1; i < cultivosArr.length; i++) {
-                if (cultivosArr[i] === cultivosArr[i-1]) repetidos++;
-                else repetidos = 0;
-                if (repetidos >= 2) break;
-            }
-            
-            if (repetidos >= 2) {
-                modalAlerta.textContent = '⚠️ ERROR: Se crearán 3+ ejercicios consecutivos con el mismo cultivo';
-                modalAlerta.classList.add('visible');
-                modalAlerta.style.background = '#f8d7da';
-                modalAlerta.style.color = '#721c24';
-            } else if (repetidos === 1) {
-                modalAlerta.textContent = '⚠️ AVISO: Se crearán 2 ejercicios consecutivos';
-                modalAlerta.classList.add('visible');
-                modalAlerta.style.background = '#fff3cd';
-                modalAlerta.style.color = '#856404';
-            } else {
-                modalAlerta.classList.remove('visible');
-            }
-        }
-        
-        function cerrarModal() {
-            document.getElementById('modal').classList.remove('active');
-        }
-        
-        document.getElementById('form-detalle').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const cultivoId = parseInt(document.getElementById('modal-cultivo').value);
-            
-            if (cultivoId === 0) {
-                if (modalData.cultivoActual > 0) {
-                    await fetch(API, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            parcelaId: modalData.parcelaId,
-                            ejercicioId: modalData.ejercicioId,
-                            cultivoId: modalData.cultivoActual
-                        })
-                    });
-                }
-            } else {
-                const r = await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        parcelaId: modalData.parcelaId,
-                        ejercicioId: modalData.ejercicioId,
-                        cultivoId: cultivoId
-                    })
-                });
-                const result = await r.json();
-                if (result.alerta) {
-                    alert('⚠️ ATENCIÓN: Esta parcela ahora tiene 3 ejercicios consecutivos con el mismo cultivo');
-                }
-            }
-            
-            cerrarModal();
-            await cargarDatos();
-        });
-        
-        init();
-    </script>
 </body>
 </html>
