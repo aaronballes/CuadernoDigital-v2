@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas - Gestión de Parcelas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2d5a27;
@@ -63,7 +64,7 @@
         }
         
         main {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
@@ -102,13 +103,44 @@
             font-weight: 500;
         }
         
-        .filters select {
+        .filters select, .filters button {
             padding: 0.5rem 1rem;
             border-radius: 8px;
             border: 1px solid var(--border);
             font-size: 0.95rem;
             background: white;
             cursor: pointer;
+        }
+        
+        .filters button {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        
+        .filters button:hover {
+            background: var(--primary-light);
+        }
+        
+        .vista-botones {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vista-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .vista-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
         
         .table-container { overflow-x: auto; }
@@ -162,6 +194,36 @@
             padding: 3rem;
             color: var(--text-light);
         }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        
+        .chart-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .oculto {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -194,8 +256,21 @@
         </div>
         
         <div class="card">
-            <div id="content">
-                <div class="loading">Cargando estadísticas...</div>
+            <div class="vista-botones">
+                <button class="vista-btn active" onclick="cambiarVista('tabla')">📋 Tabla</button>
+                <button class="vista-btn" onclick="cambiarVista('grafico')">📈 Gráficos</button>
+            </div>
+            
+            <div id="vista-tabla">
+                <div id="content-tabla">
+                    <div class="loading">Cargando estadísticas...</div>
+                </div>
+            </div>
+            
+            <div id="vista-grafico" class="oculto">
+                <div class="charts-grid" id="charts-container">
+                    <div class="loading">Cargando gráficos...</div>
+                </div>
             </div>
         </div>
     </main>
@@ -203,6 +278,7 @@
     <script>
         let datosCompletos = [];
         let propietarios = [];
+        let charts = [];
         
         function cargarDatos() {
             Promise.all([
@@ -215,17 +291,31 @@
                 const ejer = [...new Set(datos.map(d => d.ejercicio))];
                 const filtroEjer = document.getElementById('filtro-ejercicio');
                 filtroEjer.innerHTML = '<option value="">Todos</option>' +
-                    ejer.map(e => `<option value="${e}">${e}</option>`).join('');
+                    ejer.map(e => '<option value="' + e + '">' + e + '</option>').join('');
                 
                 const filtroProp = document.getElementById('filtro-propietario');
                 const propsUnicos = [...new Set(datos.map(d => d.propietario))];
                 filtroProp.innerHTML = '<option value="">Todos</option>' +
-                    propsUnicos.map(p => `<option value="${p}">${p}</option>`).join('');
+                    propsUnicos.map(p => '<option value="' + p + '">' + p + '</option>').join('');
                 
                 filtrarYMostrar();
             }).catch(err => {
-                document.getElementById('content').innerHTML = '<div class="empty">Error al cargar datos: ' + err + '</div>';
+                document.getElementById('content-tabla').innerHTML = '<div class="empty">Error al cargar datos: ' + err + '</div>';
             });
+        }
+        
+        function cambiarVista(vista) {
+            document.querySelectorAll('.vista-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (vista === 'tabla') {
+                document.getElementById('vista-tabla').classList.remove('oculto');
+                document.getElementById('vista-grafico').classList.add('oculto');
+            } else {
+                document.getElementById('vista-tabla').classList.add('oculto');
+                document.getElementById('vista-grafico').classList.remove('oculto');
+                generarGraficos();
+            }
         }
         
         function filtrarYMostrar() {
@@ -237,7 +327,7 @@
             if (propietarioId) datos = datos.filter(d => d.propietario === propietarioId);
             
             if (datos.length === 0) {
-                document.getElementById('content').innerHTML = '<div class="empty">No hay datos disponibles</div>';
+                document.getElementById('content-tabla').innerHTML = '<div class="empty">No hay datos disponibles</div>';
                 return;
             }
             
@@ -279,7 +369,100 @@
                 }
             }
             
-            document.getElementById('content').innerHTML = html;
+            document.getElementById('content-tabla').innerHTML = html;
+        }
+        
+        function generarGraficos() {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = '';
+            
+            charts.forEach(c => c.destroy());
+            charts = [];
+            
+            const ejercicioId = document.getElementById('filtro-ejercicio').value;
+            const propietarioId = document.getElementById('filtro-propietario').value;
+            
+            let datos = datosCompletos;
+            if (ejercicioId) datos = datos.filter(d => d.ejercicio === ejercicioId);
+            if (propietarioId) datos = datos.filter(d => d.propietario === propietarioId);
+            
+            if (datos.length === 0) {
+                container.innerHTML = '<div class="empty">No hay datos para mostrar gráficos</div>';
+                return;
+            }
+            
+            const ejercicios = [...new Set(datos.map(d => d.ejercicio))];
+            const propietarios = [...new Set(datos.map(d => d.propietario || 'Sin propietario'))];
+            
+            const colores = [
+                '#2d5a27', '#4a8f47', '#8bc34a', '#ffc107', '#ff9800', 
+                '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#2196f3'
+            ];
+            
+            propietarios.forEach(function(prop, idxProp) {
+                const propData = datos.filter(d => (d.propietario || 'Sin propietario') === prop);
+                
+                ejercicios.forEach(function(ejer, idxEjer) {
+                    const ejerData = propData.filter(d => d.ejercicio === ejer);
+                    if (ejerData.length === 0) return;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'chart-card';
+                    
+                    const canvas = document.createElement('canvas');
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart-container';
+                    chartDiv.appendChild(canvas);
+                    
+                    const titulo = document.createElement('h3');
+                    titulo.textContent = prop + ' - ' + ejer;
+                    
+                    card.appendChild(titulo);
+                    card.appendChild(chartDiv);
+                    container.appendChild(card);
+                    
+                    const labels = ejerData.map(d => d.cultivo);
+                    const values = ejerData.map(d => d.superficie);
+                    const backgroundColors = ejerData.map(function(_, i) {
+                        return colores[i % colores.length];
+                    });
+                    
+                    const chart = new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw.toFixed(2);
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const pct = ((value / total) * 100).toFixed(1);
+                                            return label + ': ' + value + ' ha (' + pct + '%)';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    charts.push(chart);
+                });
+            });
         }
         
         cargarDatos();
