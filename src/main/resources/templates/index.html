@@ -52,7 +52,31 @@
             font-size: 1rem;
         }
         
-        /* Main Content */
+        header nav {
+            display: flex;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+        
+        header nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        header nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        header nav a.active {
+            background: rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+        
         main {
             max-width: 1200px;
             margin: 0 auto;
@@ -236,6 +260,15 @@
     <header>
         <h1>🌾 Gestión de Parcelas</h1>
         <p>Sistema de control agrícola</p>
+        <nav>
+            <a href="/home" class="active">🏠 Inicio</a>
+            <a href="/parcelas">📍 Parcelas</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
+            <a href="/cultivos">🌱 Cultivos</a>
+            <a href="/detalles">📋 Detalles</a>
+            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/estadisticas">📊 Estadísticas</a>
+        </nav>
         <div class="status">
             <span class="status-dot" id="status-dot"></span>
             <span id="status-text">Verificando conexión...</span>

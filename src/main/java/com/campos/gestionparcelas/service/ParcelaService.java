@@ -1,50 +1,34 @@
 package com.campos.gestionparcelas.service;
 
-import com.campos.gestionparcelas.model.dto.ParcelaDTO;
 import com.campos.gestionparcelas.model.entity.Parcela;
-import com.campos.gestionparcelas.model.entity.Propietario;
 import com.campos.gestionparcelas.model.repository.ParcelaRepository;
-import com.campos.gestionparcelas.model.repository.PropietarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Comparator;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ParcelaService {
     
     private final ParcelaRepository parcelaRepository;
-    private final PropietarioRepository propietarioRepository;
     
-    public ParcelaService(ParcelaRepository parcelaRepository, PropietarioRepository propietarioRepository) {
+    @PersistenceContext
+    private EntityManager entityManager;
+    
+    public ParcelaService(ParcelaRepository parcelaRepository) {
         this.parcelaRepository = parcelaRepository;
-        this.propietarioRepository = propietarioRepository;
     }
     
     @Transactional(readOnly = true)
-    public List<ParcelaDTO> listar() {
-        return parcelaRepository.findAll().stream()
-                .sorted(Comparator.comparing((Parcela p) -> p.getPropietario() != null && p.getPropietario().getPropietario() != null ? p.getPropietario().getPropietario() : "")
-                        .thenComparing(Parcela::getPoligono)
-                        .thenComparing(Parcela::getParcela))
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public List<Parcela> listar() {
+        return parcelaRepository.findAllOrderByPropietarioAndPoligonoAndParcela();
     }
     
-    private ParcelaDTO toDTO(Parcela p) {
-        ParcelaDTO dto = new ParcelaDTO();
-        dto.setParcelaId(p.getParcelaId());
-        dto.setNombre(p.getNombre());
-        dto.setPoligono(p.getPoligono());
-        dto.setParcela(p.getParcela());
-        dto.setSuperficie(p.getSuperficie());
-        if (p.getPropietario() != null) {
-            dto.setPropietarioId(p.getPropietario().getPropietarioId());
-            dto.setPropietarioNombre(p.getPropietario().getPropietario());
-        }
-        return dto;
+    @Transactional(readOnly = true)
+    public List<Parcela> listarPorPropietario(Long propietarioId) {
+        return parcelaRepository.findByPropietarioIdOrderByPoligonoAscParcelaAsc(propietarioId);
     }
     
     @Transactional(readOnly = true)
@@ -54,9 +38,9 @@ public class ParcelaService {
     
     @Transactional
     public Parcela guardar(Parcela parcela) {
-        if (parcela.getPropietario() != null && parcela.getPropietario().getPropietarioId() != null) {
-            Propietario propietario = propietarioRepository.findById(parcela.getPropietario().getPropietarioId()).orElse(null);
-            parcela.setPropietario(propietario);
+        if (parcela.getParcelaId() == null) {
+            Long maxId = parcelaRepository.findMaxParcelaId();
+            parcela.setParcelaId(maxId == null ? 1L : maxId + 1);
         }
         return parcelaRepository.save(parcela);
     }

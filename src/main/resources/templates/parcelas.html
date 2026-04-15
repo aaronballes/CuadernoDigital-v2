@@ -41,7 +41,12 @@
         
         header h1 { font-size: 1.25rem; }
         
-        header a {
+        header nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        header nav a {
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
@@ -233,7 +238,15 @@
 <body>
     <header>
         <h1>📍 Parcelas</h1>
-        <a href="/home">← Inicio</a>
+        <nav>
+            <a href="/home">🏠 Inicio</a>
+            <a href="/parcelas" class="active">📍 Parcelas</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
+            <a href="/cultivos">🌱 Cultivos</a>
+            <a href="/detalles">📋 Detalles</a>
+            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/estadisticas">📊 Estadísticas</a>
+        </nav>
     </header>
     
     <main>
@@ -341,12 +354,14 @@
             }
             let html = '<div class="table-container"><table><thead><tr><th>Nombre</th><th>Polígono</th><th>Parcela</th><th>Superficie</th><th>Propietario</th><th>Acciones</th></tr></thead><tbody>';
             data.forEach(p => {
+                const prop = propietarios.find(x => x.propietarioId === p.propietarioId);
+                const nombrePropietario = prop ? prop.propietario : '-';
                 html += `<tr>
                     <td><strong>${p.nombre || '-'}</strong></td>
                     <td>${p.poligono || '-'}</td>
                     <td>${p.parcela || '-'}</td>
                     <td>${p.superficie || '-'}</td>
-                    <td>${p.propietarioNombre || '-'}</td>
+                    <td>${nombrePropietario}</td>
                     <td class="actions">
                         <button class="btn-sm btn-edit" onclick='editarParcela(${JSON.stringify(p)})'>Editar</button>
                         <button class="btn-sm btn-delete" onclick="eliminarParcela(${p.parcelaId})">Eliminar</button>
@@ -382,13 +397,13 @@
         document.getElementById('form-parcela').addEventListener('submit', function(e) {
             e.preventDefault();
             const id = document.getElementById('parcela-id').value;
-            const propietarioId = parseInt(document.getElementById('propietario-id').value) || null;
+            const propietarioIdVal = document.getElementById('propietario-id').value;
             const parcela = {
                 nombre: document.getElementById('nombre').value,
                 poligono: document.getElementById('poligono').value,
                 parcela: document.getElementById('parcela').value,
                 superficie: parseFloat(document.getElementById('superficie').value),
-                propietario: propietarioId ? { propietarioId: propietarioId } : null
+                propietarioId: propietarioIdVal ? parseInt(propietarioIdVal) : null
             };
             
             const method = id ? 'PUT' : 'POST';
@@ -398,7 +413,16 @@
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parcela)
-            }).then(r => { if (r.ok) { cerrarModal(); cargarParcelas(); } });
+            }).then(r => {
+                if (r.ok) {
+                    cerrarModal();
+                    cargarParcelas();
+                } else {
+                    r.text().then(text => alert('Error al guardar (' + r.status + '): ' + text));
+                }
+            }).catch(err => {
+                alert('Error: ' + err);
+            });
         });
         
         function eliminarParcela(id) {

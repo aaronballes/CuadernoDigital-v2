@@ -40,7 +40,12 @@
         
         header h1 { font-size: 1.25rem; }
         
-        header a {
+        header nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        header nav a {
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
@@ -282,7 +287,15 @@
 <body>
     <header>
         <h1>📋 Detalles</h1>
-        <a href="/home">← Inicio</a>
+        <nav>
+            <a href="/home">🏠 Inicio</a>
+            <a href="/parcelas">📍 Parcelas</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
+            <a href="/cultivos">🌱 Cultivos</a>
+            <a href="/detalles" class="active">📋 Detalles</a>
+            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/estadisticas">📊 Estadísticas</a>
+        </nav>
     </header>
     
     <main>

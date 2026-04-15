@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Gestión de Parcelas</title>
+    <style>
+        :root {
+            --primary: #2d5a27;
+            --primary-light: #4a8f47;
+            --bg: #f8faf5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e0e8e0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.07);
+            --radius: 12px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        
+        header h1 { font-size: 1.25rem; }
+        
+        header nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        header nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        header nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        header nav a.active {
+            background: rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .page-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        
+        .filters label {
+            font-weight: 500;
+        }
+        
+        .filters select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .table-container { overflow-x: auto; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background: #f8faf5;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafcf8; }
+        
+        .porcentaje-bar {
+            height: 20px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            position: relative;
+            min-width: 100px;
+        }
+        
+        .porcentaje-text {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .total-row td {
+            font-weight: 600;
+            background: #f0f4ed;
+        }
+        
+        .loading, .empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📊 Estadísticas</h1>
+        <nav>
+            <a href="/home">🏠 Inicio</a>
+            <a href="/parcelas">📍 Parcelas</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
+            <a href="/cultivos">🌱 Cultivos</a>
+            <a href="/detalles">📋 Detalles</a>
+            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/estadisticas" class="active">📊 Estadísticas</a>
+        </nav>
+    </header>
+    
+    <main>
+        <div class="page-header">
+            <h2>Superficie por Cultivo</h2>
+            <div class="filters">
+                <label>Filtrar por ejercicio:</label>
+                <select id="filtro-ejercicio" onchange="filtrarYMostrar()">
+                    <option value="">Todos</option>
+                </select>
+                <label>Filtrar por propietario:</label>
+                <select id="filtro-propietario" onchange="filtrarYMostrar()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div id="content">
+                <div class="loading">Cargando estadísticas...</div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        let datosCompletos = [];
+        let propietarios = [];
+        
+        function cargarDatos() {
+            Promise.all([
+                fetch('/api/estadisticas/superficie-por-cultivo').then(r => r.json()),
+                fetch('/api/propietarios').then(r => r.json())
+            ]).then(([datos, props]) => {
+                datosCompletos = datos;
+                propietarios = props;
+                
+                const ejer = [...new Set(datos.map(d => d.ejercicio))];
+                const filtroEjer = document.getElementById('filtro-ejercicio');
+                filtroEjer.innerHTML = '<option value="">Todos</option>' +
+                    ejer.map(e => `<option value="${e}">${e}</option>`).join('');
+                
+                const filtroProp = document.getElementById('filtro-propietario');
+                const propsUnicos = [...new Set(datos.map(d => d.propietario))];
+                filtroProp.innerHTML = '<option value="">Todos</option>' +
+                    propsUnicos.map(p => `<option value="${p}">${p}</option>`).join('');
+                
+                filtrarYMostrar();
+            }).catch(err => {
+                document.getElementById('content').innerHTML = '<div class="empty">Error al cargar datos: ' + err + '</div>';
+            });
+        }
+        
+        function filtrarYMostrar() {
+            const ejercicioId = document.getElementById('filtro-ejercicio').value;
+            const propietarioId = document.getElementById('filtro-propietario').value;
+            
+            let datos = datosCompletos;
+            if (ejercicioId) datos = datos.filter(d => d.ejercicio === ejercicioId);
+            if (propietarioId) datos = datos.filter(d => d.propietario === propietarioId);
+            
+            if (datos.length === 0) {
+                document.getElementById('content').innerHTML = '<div class="empty">No hay datos disponibles</div>';
+                return;
+            }
+            
+            const propietarioAgrupado = {};
+            datos.forEach(d => {
+                const propKey = d.propietario || 'Sin propietario';
+                if (!propietarioAgrupado[propKey]) {
+                    propietarioAgrupado[propKey] = {};
+                }
+                if (!propietarioAgrupado[propKey][d.ejercicio]) {
+                    propietarioAgrupado[propKey][d.ejercicio] = {
+                        nombre: d.ejercicio,
+                        total: d.total,
+                        cultivos: []
+                    };
+                }
+                propietarioAgrupado[propKey][d.ejercicio].cultivos.push(d);
+            });
+            
+            let html = '';
+            for (const [propNombre, ejerciciosData] of Object.entries(propietarioAgrupado)) {
+                html += '<h2 style="margin-top: 2rem; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;">👤 ' + propNombre + '</h2>';
+                
+                for (const [ejerNombre, ejerData] of Object.entries(ejerciciosData)) {
+                    html += '<h3 style="margin-top: 1.5rem; margin-left: 1rem;">📅 Ejercicio: ' + ejerNombre + ' (Total: ' + ejerData.total.toFixed(2) + ' ha)</h3>';
+                    html += '<div class="table-container" style="margin-left: 1rem;"><table><thead><tr><th>Cultivo</th><th>Superficie (ha)</th><th>%</th><th>Distribución</th></tr></thead><tbody>';
+                    
+                    ejerData.cultivos.forEach(function(c) {
+                        html += '<tr>';
+                        html += '<td><strong>' + c.cultivo + '</strong></td>';
+                        html += '<td>' + c.superficie.toFixed(2) + '</td>';
+                        html += '<td>' + c.porcentaje + '%</td>';
+                        html += '<td><div class="porcentaje-bar" style="width: ' + Math.min(c.porcentaje, 100) + '%"><span class="porcentaje-text">' + c.porcentaje + '%</span></div></td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '<tr class="total-row"><td><strong>Total</strong></td><td>' + ejerData.total.toFixed(2) + '</td><td>100%</td><td></td></tr>';
+                    html += '</tbody></table></div>';
+                }
+            }
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        cargarDatos();
+    </script>
+</body>
+</html>

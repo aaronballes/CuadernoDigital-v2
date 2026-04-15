@@ -1,6 +1,5 @@
 package com.campos.gestionparcelas.controller;
 
-import com.campos.gestionparcelas.model.dto.ParcelaDTO;
 import com.campos.gestionparcelas.model.entity.Parcela;
 import com.campos.gestionparcelas.service.ParcelaService;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,10 @@ public class ParcelaController {
     }
     
     @GetMapping
-    public List<ParcelaDTO> listar() {
+    public List<Parcela> listar(@RequestParam(required = false) Long propietarioId) {
+        if (propietarioId != null) {
+            return parcelaService.listarPorPropietario(propietarioId);
+        }
         return parcelaService.listar();
     }
     

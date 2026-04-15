@@ -40,4 +40,9 @@ public class HomeController {
     public String propietarios() {
         return "propietarios";
     }
+    
+    @GetMapping("/estadisticas")
+    public String estadisticas() {
+        return "estadisticas";
+    }
 }

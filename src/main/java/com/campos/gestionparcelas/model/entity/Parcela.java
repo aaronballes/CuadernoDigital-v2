@@ -14,30 +14,17 @@ import java.math.BigDecimal;
 public class Parcela {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "parcela_id")
     private Long parcelaId;
     
-    /** Nombre descriptivo de la parcela */
     private String nombre;
-    
-    /** Número de polígono donde se ubica la parcela */
     private String poligono;
-    
-    /** Número identificador de la parcela dentro del polígono */
     private String parcela;
     
-    /** Superficie de la parcela en hectáreas */
     @Column(name = "superficie")
     private BigDecimal superficie;
     
-    /** Propietario de la parcela */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "propietario_id")
-    private Propietario propietario;
-    
-    /** ID del propietario (para兼容性 con datos existentes) */
-    @Transient
+    @Column(name = "propietario_id")
     private Long propietarioId;
 
     public Parcela() {}
@@ -57,12 +44,6 @@ public class Parcela {
     public BigDecimal getSuperficie() { return superficie; }
     public void setSuperficie(BigDecimal superficie) { this.superficie = superficie; }
     
-    public Propietario getPropietario() { return propietario; }
-    public void setPropietario(Propietario propietario) { this.propietario = propietario; }
-    
-    public Long getPropietarioId() { 
-        if (propietario != null) return propietario.getPropietarioId();
-        return propietarioId; 
-    }
+    public Long getPropietarioId() { return propietarioId; }
     public void setPropietarioId(Long propietarioId) { this.propietarioId = propietarioId; }
 }
