@@ -81,6 +81,7 @@ mvn spring-boot:run
 | POST | /api/parcelas | Crear parcela |
 | PUT | /api/parcelas/{id} | Actualizar parcela |
 | DELETE | /api/parcelas/{id} | Eliminar parcela |
+| GET | /api/parcelas?propietarioId=X | Filtrar parcelas por propietario |
 | GET | /api/ejercicios | Listar ejercicios |
 | POST | /api/ejercicios | Crear ejercicio |
 | DELETE | /api/ejercicios/{id} | Eliminar ejercicio |
@@ -90,8 +91,13 @@ mvn spring-boot:run
 | DELETE | /api/cultivos/{id} | Eliminar cultivo |
 | GET | /api/detalles | Listar detalles (matriz parcela × ejercicio) |
 | GET | /api/detalles?ejercicio=X | Filtrar detalles por ejercicio |
+| GET | /api/detalles?propietarioId=X | Filtrar detalles por propietario |
 | POST | /api/detalles | Asignar cultivo a parcela/ejercicio |
 | DELETE | /api/detalles | Eliminar detalle |
+| GET | /api/propietarios | Listar propietarios |
+| POST | /api/propietarios | Crear propietario |
+| DELETE | /api/propietarios/{id} | Eliminar propietario |
+| GET | /api/estadisticas/superficie-por-cultivo | Estadísticas de superficie por cultivo |
 
 ## Estructura del proyecto
 
