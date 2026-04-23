@@ -10,150 +10,380 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        :root {
+            --primary: #2d5a27;
+            --primary-light: #4a8f47;
+            --primary-dark: #1e3d1a;
+            --accent: #8bc34a;
+            --bg: #f8faf5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e0e8e0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.07);
+            --radius: 12px;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c5f2d 0%, #97bc62 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            line-height: 1.6;
         }
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-        }
-        h1 {
-            color: #2c5f2d;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2em;
-        }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .menu-item {
-            background: linear-gradient(135deg, #2c5f2d 0%, #4a8f47 100%);
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 25px;
-            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        header nav {
+            display: flex;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+        
+        header nav a {
+            color: white;
             text-decoration: none;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        header nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        header nav a.active {
+            background: rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-        }
-        .menu-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(44, 95, 45, 0.4);
-        }
-        .menu-item .icon {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .menu-item .title {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        .menu-item .desc {
-            font-size: 0.85em;
-            opacity: 0.9;
-            margin-top: 5px;
-        }
-        .status {
-            margin-top: 30px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 10px;
             text-align: center;
         }
-        .status.online {
-            background: #d4edda;
-            color: #155724;
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-color: var(--accent);
         }
-        .status.offline {
-            background: #f8d7da;
-            color: #721c24;
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
-        .full-width {
-            grid-column: 1 / -1;
+        
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+        
+        .card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+        
+        .stat-card .label {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Status */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.online {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.offline {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 1.5rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            main {
+                padding: 1rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1.25rem;
+            }
+            
+            .card-icon {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <header>
         <h1>🌾 Gestión de Parcelas</h1>
-        <p class="subtitle">Sistema de gestión agrícola</p>
+        <p>Sistema de control agrícola</p>
+        <nav>
+            <a href="/home" class="active">🏠 Inicio</a>
+            <a href="/parcelas">📍 Parcelas</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
+            <a href="/cultivos">🌱 Cultivos</a>
+            <a href="/detalles">📋 Detalles</a>
+            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/estadisticas">📊 Estadísticas</a>
+        </nav>
+        <div class="status">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Verificando conexión...</span>
+        </div>
+    </header>
+    
+    <main>
+        <div id="stats" class="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="number" id="stat-parcelas">0</div>
+                <div class="label">Parcelas</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-ejercicios">0</div>
+                <div class="label">Ejercicios</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-cultivos">0</div>
+                <div class="label">Cultivos</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-detalles">0</div>
+                <div class="label">Asignaciones</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-propietarios">0</div>
+                <div class="label">Propietarios</div>
+            </div>
+        </div>
         
-        <div class="menu">
-            <a href="/parcelas" class="menu-item">
-                <span class="icon">📍</span>
-                <span class="title">Parcelas</span>
-                <span class="desc">Gestionar parcelas</span>
-            </a>
-            <a href="/ejercicios" class="menu-item">
-                <span class="icon">📅</span>
-                <span class="title">Ejercicios</span>
-                <span class="desc">Gestionar ejercicios</span>
-            </a>
-            <a href="/cultivos" class="menu-item">
-                <span class="icon">🌱</span>
-                <span class="title">Cultivos</span>
-                <span class="desc">Gestionar cultivos</span>
-            </a>
-            <a href="/detalles" class="menu-item">
-                <span class="icon">📋</span>
-                <span class="title">Detalles</span>
-                <span class="desc">Ver detalles</span>
-            </a>
-            <a href="/h2-console" class="menu-item full-width" style="background: linear-gradient(135deg, #495057 0%, #6c757d 100%);">
-                <span class="icon">🗄️</span>
-                <span class="title">Consola H2</span>
-                <span class="desc">Base de datos en memoria</span>
-            </a>
-        </div>
-            <a href="/h2-console" class="menu-item full-width" style="background: linear-gradient(135deg, #495057 0%, #6c757d 100%);">
-                <span class="icon">🗄️</span>
-                <span class="title">Consola H2</span>
-                <span class="desc">Base de datos en memoria</span>
-            </a>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
         </div>
         
-        <div id="status" class="status">
-            Verificando conexión...
+        <div class="card-grid" id="menu" style="display: none;">
+            <a href="/parcelas" class="card">
+                <span class="card-icon">📍</span>
+                <h3>Parcelas</h3>
+                <p>Gestionar parcelas agrícolas</p>
+            </a>
+            
+            <a href="/ejercicios" class="card">
+                <span class="card-icon">📅</span>
+                <h3>Ejercicios</h3>
+                <p>Control anual de campañas</p>
+            </a>
+            
+            <a href="/cultivos" class="card">
+                <span class="card-icon">🌱</span>
+                <h3>Cultivos</h3>
+                <p>Tipos de cultivos disponibles</p>
+            </a>
+            
+            <a href="/detalles" class="card">
+                <span class="card-icon">📋</span>
+                <h3>Detalles</h3>
+                <p>Asignar cultivos a parcelas</p>
+            </a>
+            
+            <a href="/propietarios" class="card">
+                <span class="card-icon">👤</span>
+                <h3>Propietarios</h3>
+                <p>Gestionar propietarios</p>
+            </a>
+            
+            <a href="/estadisticas" class="card">
+                <span class="card-icon">📊</span>
+                <h3>Estadísticas</h3>
+                <p>Gráficos y análisis de cultivos</p>
+            </a>
         </div>
-    </div>
+    </main>
+    
+    <footer>
+        Sistema de Gestión de Parcelas Agrícolas
+    </footer>
     
     <script>
-        fetch('/api/parcelas')
-            .then(response => {
-                const status = document.getElementById('status');
-                if (response.ok) {
-                    status.className = 'status online';
-                    status.innerHTML = '✓ API en línea - Servidor funcionando correctamente';
-                } else {
-                    status.className = 'status offline';
-                    status.innerHTML = '✗ Error de conexión con la API';
+        async function loadStats() {
+            try {
+                const [parcelas, ejercicios, cultivos, propietarios] = await Promise.all([
+                    fetch('/api/parcelas').then(r => r.json()).catch(() => []),
+                    fetch('/api/ejercicios').then(r => r.json()).catch(() => []),
+                    fetch('/api/cultivos').then(r => r.json()).catch(() => []),
+                    fetch('/api/propietarios').then(r => r.json()).catch(() => [])
+                ]);
+                
+                document.getElementById('stat-parcelas').textContent = parcelas.length;
+                document.getElementById('stat-ejercicios').textContent = ejercicios.length;
+                document.getElementById('stat-cultivos').textContent = cultivos.length;
+                document.getElementById('stat-propietarios').textContent = propietarios.length;
+                
+                // Contar asignaciones de detalles
+                let detallesCount = 0;
+                for (const p of parcelas) {
+                    for (const e of ejercicios) {
+                        detallesCount++;
+                    }
                 }
-            })
-            .catch(() => {
-                const status = document.getElementById('status');
-                status.className = 'status offline';
-                status.innerHTML = '✗ API no disponible';
-            });
+                document.getElementById('stat-detalles').textContent = parcelas.length * ejercicios.length;
+                
+                document.getElementById('stats').style.display = 'grid';
+                document.getElementById('status-dot').classList.add('online');
+                document.getElementById('status-text').textContent = 'Sistema conectado';
+                
+            } catch (error) {
+                document.getElementById('status-dot').classList.add('offline');
+                document.getElementById('status-text').textContent = 'Error de conexión';
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('menu').style.display = 'grid';
+        }
+        
+        loadStats();
     </script>
 </body>
 </html>

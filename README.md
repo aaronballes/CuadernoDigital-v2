@@ -44,12 +44,22 @@ server.port=8081
 
 ## Ejecución
 
+### Opción 1: Script automático (Windows)
+
+Ejecutar el script `run.bat` que cierra cualquier proceso anterior en el puerto 8081 y arranca la aplicación:
+
+```bat
+run.bat
+```
+
+La aplicación estará disponible en: http://localhost:8081
+
+### Opción 2: Línea de comandos
+
 ```bash
 cd gestion-parcelas-api
 mvn spring-boot:run
 ```
-
-La aplicación estará disponible en: http://localhost:8081
 
 ## Endpoints
 
@@ -60,7 +70,8 @@ La aplicación estará disponible en: http://localhost:8081
 | Ejercicios | http://localhost:8081/ejercicios |
 | Cultivos | http://localhost:8081/cultivos |
 | Detalles | http://localhost:8081/detalles |
-| Consola H2 | http://localhost:8081/h2-console |
+| Propietarios | http://localhost:8081/propietarios |
+| Estadísticas | http://localhost:8081/estadisticas |
 
 ## API REST
 
@@ -70,6 +81,7 @@ La aplicación estará disponible en: http://localhost:8081
 | POST | /api/parcelas | Crear parcela |
 | PUT | /api/parcelas/{id} | Actualizar parcela |
 | DELETE | /api/parcelas/{id} | Eliminar parcela |
+| GET | /api/parcelas?propietarioId=X | Filtrar parcelas por propietario |
 | GET | /api/ejercicios | Listar ejercicios |
 | POST | /api/ejercicios | Crear ejercicio |
 | DELETE | /api/ejercicios/{id} | Eliminar ejercicio |
@@ -79,8 +91,13 @@ La aplicación estará disponible en: http://localhost:8081
 | DELETE | /api/cultivos/{id} | Eliminar cultivo |
 | GET | /api/detalles | Listar detalles (matriz parcela × ejercicio) |
 | GET | /api/detalles?ejercicio=X | Filtrar detalles por ejercicio |
+| GET | /api/detalles?propietarioId=X | Filtrar detalles por propietario |
 | POST | /api/detalles | Asignar cultivo a parcela/ejercicio |
 | DELETE | /api/detalles | Eliminar detalle |
+| GET | /api/propietarios | Listar propietarios |
+| POST | /api/propietarios | Crear propietario |
+| DELETE | /api/propietarios/{id} | Eliminar propietario |
+| GET | /api/estadisticas/superficie-por-cultivo | Estadísticas de superficie por cultivo |
 
 ## Estructura del proyecto
 

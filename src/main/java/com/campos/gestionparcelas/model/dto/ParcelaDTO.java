@@ -1,33 +1,16 @@
-package com.campos.gestionparcelas.model.entity;
+package com.campos.gestionparcelas.model.dto;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 
-/**
- * Entidad que representa una parcela agrícola.
- * 
- * Una parcela es una porción de terreno identificada por su nombre,
- * polígono, número de parcela y superficie.
- */
-@Entity
-@Table(name = "parcelas")
-public class Parcela {
+public class ParcelaDTO {
     
-    @Id
-    @Column(name = "parcela_id")
     private Long parcelaId;
-    
     private String nombre;
     private String poligono;
     private String parcela;
-    
-    @Column(name = "superficie")
     private BigDecimal superficie;
-    
-    @Column(name = "propietario_id")
     private Long propietarioId;
-
-    public Parcela() {}
+    private String propietarioNombre;
 
     public Long getParcelaId() { return parcelaId; }
     public void setParcelaId(Long parcelaId) { this.parcelaId = parcelaId; }
@@ -46,4 +29,7 @@ public class Parcela {
     
     public Long getPropietarioId() { return propietarioId; }
     public void setPropietarioId(Long propietarioId) { this.propietarioId = propietarioId; }
+    
+    public String getPropietarioNombre() { return propietarioNombre; }
+    public void setPropietarioNombre(String propietarioNombre) { this.propietarioNombre = propietarioNombre; }
 }

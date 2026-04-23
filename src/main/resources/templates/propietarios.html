@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ejercicios - Gestión de Parcelas</title>
+    <title>Propietarios - Gestión de Parcelas</title>
     <style>
         :root {
             --primary: #2d5a27;
             --primary-light: #4a8f47;
             --primary-dark: #1e3d1a;
+            --accent: #8bc34a;
             --bg: #f8faf5;
             --card-bg: #ffffff;
             --text: #333333;
@@ -35,6 +36,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
         
         header h1 { font-size: 1.25rem; }
@@ -50,20 +52,31 @@
             padding: 0.5rem 1rem;
             background: rgba(255,255,255,0.2);
             border-radius: 8px;
+            transition: background 0.2s;
+            font-size: 0.9rem;
         }
         
         header a:hover { background: rgba(255,255,255,0.3); }
         
-        main { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
         
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
         
-        .page-header h2 { color: var(--primary); }
+        .page-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
         
         .btn {
             padding: 0.75rem 1.5rem;
@@ -71,11 +84,16 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
             background: var(--primary);
             color: white;
         }
         
-        .btn:hover { background: var(--primary-light); }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
         
         .card {
             background: var(--card-bg);
@@ -85,22 +103,28 @@
             overflow: hidden;
         }
         
-        .list-item {
-            padding: 1rem 1.5rem;
+        .table-container { overflow-x: auto; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
-        .list-item:last-child { border-bottom: none; }
-        .list-item:hover { background: #fafcf8; }
-        
-        .list-item .title {
-            font-size: 1.1rem;
+        th {
+            background: #f8faf5;
             font-weight: 600;
-            color: var(--primary);
+            color: var(--text);
+            white-space: nowrap;
         }
+        
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafcf8; }
         
         .actions { display: flex; gap: 0.5rem; }
         
@@ -113,7 +137,9 @@
         }
         
         .btn-edit { background: var(--primary); color: white; }
+        .btn-edit:hover { background: var(--primary-light); }
         .btn-delete { background: var(--danger); color: white; }
+        .btn-delete:hover { background: #c82333; }
         
         .loading, .empty {
             text-align: center;
@@ -143,22 +169,26 @@
             padding: 2rem;
             border-radius: var(--radius);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1.5rem;
         }
         
-        .modal-header h3 { color: var(--primary); }
+        .modal-header h3 { color: var(--primary); font-size: 1.25rem; }
         
         .close {
             background: none;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
+            color: var(--text-light);
         }
         
         .form-group { margin-bottom: 1rem; }
@@ -167,6 +197,7 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .form-group input {
@@ -180,34 +211,41 @@
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(45,90,39,0.1);
         }
         
-        .btn-full { width: 100%; }
+        .btn-full { width: 100%; margin-top: 1rem; }
+        
+        @media (max-width: 768px) {
+            main { padding: 1rem; }
+            th, td { padding: 0.75rem 0.5rem; font-size: 0.85rem; }
+            .actions { flex-direction: column; gap: 0.25rem; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>📅 Ejercicios</h1>
+        <h1>👤 Propietarios</h1>
         <nav>
             <a href="/home">🏠 Inicio</a>
             <a href="/parcelas">📍 Parcelas</a>
-            <a href="/ejercicios" class="active">📅 Ejercicios</a>
+            <a href="/ejercicios">📅 Ejercicios</a>
             <a href="/cultivos">🌱 Cultivos</a>
             <a href="/detalles">📋 Detalles</a>
-            <a href="/propietarios">👤 Propietarios</a>
+            <a href="/propietarios" class="active">👤 Propietarios</a>
             <a href="/estadisticas">📊 Estadísticas</a>
         </nav>
     </header>
     
     <main>
         <div class="page-header">
-            <h2>Ejercicios (Campañas Anuales)</h2>
-            <button class="btn" onclick="abrirModalCrear()">+ Nuevo Ejercicio</button>
+            <h2>Gestión de Propietarios</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrear()">+ Nuevo Propietario</button>
         </div>
         
         <div class="card">
             <div id="content">
-                <div class="loading">Cargando ejercicios...</div>
+                <div class="loading">Cargando propietarios...</div>
             </div>
         </div>
     </main>
@@ -215,60 +253,61 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-titulo">Nuevo Ejercicio</h3>
+                <h3 id="modal-titulo">Nuevo Propietario</h3>
                 <button class="close" onclick="cerrarModal()">&times;</button>
             </div>
-            <form id="form-ejercicio">
-                <input type="hidden" id="ejercicio-id">
+            <form id="form-propietario">
+                <input type="hidden" id="propietario-id">
                 <div class="form-group">
-                    <label>Año</label>
-                    <input type="text" id="ejercicio" required placeholder="Ej: 2026">
+                    <label>Propietario</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Juan García">
                 </div>
-                <button type="submit" class="btn btn-full">Guardar</button>
+                <button type="submit" class="btn btn-primary btn-full">Guardar</button>
             </form>
         </div>
     </div>
     
     <script>
-        const API = '/api/ejercicios';
+        const API = '/api/propietarios';
         
-        function cargarEjercicios() {
+        function cargarPropietarios() {
             fetch(API)
                 .then(r => r.json())
                 .then(data => {
                     const content = document.getElementById('content');
                     if (!data.length) {
-                        content.innerHTML = '<div class="empty">No hay ejercicios registrados</div>';
+                        content.innerHTML = '<div class="empty">No hay propietarios registrados. ¡Crea el primero!</div>';
                         return;
                     }
-                    let html = '';
-                    data.forEach(e => {
-                        html += `<div class="list-item">
-                            <span class="title">${e.ejercicio || e.ejercicioId}</span>
-                            <div class="actions">
-                                <button class="btn-sm btn-edit" onclick='editarEjercicio(${JSON.stringify(e)})'>Editar</button>
-                                <button class="btn-sm btn-delete" onclick="eliminarEjercicio('${e.ejercicioId}')">Eliminar</button>
-                            </div>
-                        </div>`;
+                    let html = '<div class="table-container"><table><thead><tr><th>Propietario</th><th>Acciones</th></tr></thead><tbody>';
+                    data.forEach(p => {
+                        html += `<tr>
+                            <td><strong>${p.propietario || '-'}</strong></td>
+                            <td class="actions">
+                                <button class="btn-sm btn-edit" onclick='editarPropietario(${JSON.stringify(p)})'>Editar</button>
+                                <button class="btn-sm btn-delete" onclick="eliminarPropietario(${p.propietarioId})">Eliminar</button>
+                            </td>
+                        </tr>`;
                     });
+                    html += '</tbody></table></div>';
                     content.innerHTML = html;
                 })
                 .catch(() => {
-                    content.innerHTML = '<div class="empty">Error al cargar ejercicios</div>';
+                    document.getElementById('content').innerHTML = '<div class="empty">Error al cargar los propietarios</div>';
                 });
         }
         
         function abrirModalCrear() {
-            document.getElementById('modal-titulo').textContent = 'Nuevo Ejercicio';
-            document.getElementById('form-ejercicio').reset();
-            document.getElementById('ejercicio-id').value = '';
+            document.getElementById('modal-titulo').textContent = 'Nuevo Propietario';
+            document.getElementById('form-propietario').reset();
+            document.getElementById('propietario-id').value = '';
             document.getElementById('modal').classList.add('active');
         }
         
-        function editarEjercicio(e) {
-            document.getElementById('modal-titulo').textContent = 'Editar Ejercicio';
-            document.getElementById('ejercicio-id').value = e.ejercicioId;
-            document.getElementById('ejercicio').value = e.ejercicio || '';
+        function editarPropietario(p) {
+            document.getElementById('modal-titulo').textContent = 'Editar Propietario';
+            document.getElementById('propietario-id').value = p.propietarioId;
+            document.getElementById('nombre').value = p.propietario || '';
             document.getElementById('modal').classList.add('active');
         }
         
@@ -276,10 +315,12 @@
             document.getElementById('modal').classList.remove('active');
         }
         
-        document.getElementById('form-ejercicio').addEventListener('submit', function(e) {
+        document.getElementById('form-propietario').addEventListener('submit', function(e) {
             e.preventDefault();
-            const id = document.getElementById('ejercicio-id').value;
-            const ejercicio = { ejercicio: document.getElementById('ejercicio').value };
+            const id = document.getElementById('propietario-id').value;
+            const propietario = {
+                propietario: document.getElementById('nombre').value
+            };
             
             const method = id ? 'PUT' : 'POST';
             const url = id ? API + '/' + id : API;
@@ -287,18 +328,18 @@
             fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(ejercicio)
-            }).then(r => { if (r.ok) { cerrarModal(); cargarEjercicios(); } });
+                body: JSON.stringify(propietario)
+            }).then(r => { if (r.ok) { cerrarModal(); cargarPropietarios(); } });
         });
         
-        function eliminarEjercicio(id) {
-            if (confirm('¿Eliminar este ejercicio?')) {
+        function eliminarPropietario(id) {
+            if (confirm('¿Eliminar este propietario?')) {
                 fetch(API + '/' + id, { method: 'DELETE' })
-                    .then(r => { if (r.ok) cargarEjercicios(); });
+                    .then(r => { if (r.ok) cargarPropietarios(); });
             }
         }
         
-        cargarEjercicios();
+        cargarPropietarios();
     </script>
 </body>
 </html>

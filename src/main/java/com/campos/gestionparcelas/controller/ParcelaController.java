@@ -18,7 +18,10 @@ public class ParcelaController {
     }
     
     @GetMapping
-    public List<Parcela> listar() {
+    public List<Parcela> listar(@RequestParam(required = false) Long propietarioId) {
+        if (propietarioId != null) {
+            return parcelaService.listarPorPropietario(propietarioId);
+        }
         return parcelaService.listar();
     }
     

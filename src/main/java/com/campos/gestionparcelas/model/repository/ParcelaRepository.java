@@ -11,4 +11,9 @@ public interface ParcelaRepository extends JpaRepository<Parcela, Long> {
     
     @Query("SELECT p FROM Parcela p ORDER BY p.propietarioId, p.poligono, p.parcela")
     List<Parcela> findAllOrderByPropietarioAndPoligonoAndParcela();
+    
+    List<Parcela> findByPropietarioIdOrderByPoligonoAscParcelaAsc(Long propietarioId);
+    
+    @Query("SELECT MAX(p.parcelaId) FROM Parcela p")
+    Long findMaxParcelaId();
 }
